@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Study Planner - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background:white;
+        }
+        .login-frame {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .login-frame:hover {
+            transform: translateY(-5px);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            transition: background 0.3s;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(to right, #764ba2, #667eea);
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+            transition: background 0.3s;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        .error {
+            color: #ef4444;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .success {
+            color: #22c55e;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+      
+    </style>
+</head>
+<body>
+    <div class="container flex h-screen">
+        <div class="left-side flex-2 bg-cover bg-center" style="background-image: url('{{ url_for('static', filename='images/b4.png') }}');"></div>
+        <div class="right-side flex-1 flex items-center justify-center p-6">
+            <div class="login-frame p-6 w-full max-w-md">
+                <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">Smart Study Planner</h1>
+                {% if error %}
+                    <p class="error">{{ error }}</p>
+                {% endif %}
+                {% if success %}
+                    <p class="success">{{ success }}</p>
+                {% endif %}
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="form-group mb-4">
+                        <label for="username" class="block text-gray-600 mb-2">Username:</label>
+                        <input type="text" id="username" name="username" required class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="password" class="block text-gray-600 mb-2">Password:</label>
+                        <input type="password" id="password" name="password" required class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                    <div id="gender_field" class="form-group mb-4">
+                        <label for="gender" class="block text-gray-600 mb-2">Gender:</label>
+                        <select id="gender" name="gender" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="button-group flex justify-center gap-4 mb-4">
+                        <button type="submit" name="action" value="login" class="btn-primary">Login</button>
+                        <button type="submit" name="action" value="signup" class="btn-primary" id="signup_submit" type="button"  name="action" value="signup" class="btn-primary" class="btn-secondary">Sign Up</button>
+                    </div>
+                  
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+ 
+    </script>
+</body>
+</html>

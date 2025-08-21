@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Study Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2f0 70%, #c7d2e3 100%);
+            font-family: 'Poppins', sans-serif;
+            color: #2a3d5e;
+            overflow-x: hidden;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        h1 {
+            font-family: 'Lora', serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            text-align: center;
+            background: linear-gradient(to right, #4a6ea9, #2a3d5e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 2rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(74, 110, 169, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #4a6ea9, #2a3d5e);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: background 0.4s ease, transform 0.2s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(to right, #2a3d5e, #4a6ea9);
+            transform: scale(1.05);
+        }
+        .btn-secondary {
+            background: #e0e7ff;
+            color: #2a3d5e;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            transition: background 0.4s ease, transform 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background: #c7d2e3;
+            transform: scale(1.05);
+        }
+        .error-message {
+            display: none;
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .constraint-input {
+            display: none;
+        }
+        .total-hours {
+            font-weight: 600;
+            color: #2a3d5e;
+            margin-top: 1rem;
+            font-family: 'Lora', serif;
+        }
+        .hours-mismatch {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            animation: fadeIn 0.5s;
+        }
+        .average-score {
+            font-weight: 600;
+            color: #2a3d5e;
+            margin-top: 1rem;
+            font-family: 'Lora', serif;
+        }
+        .score-error {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            animation: fadeIn 0.5s;
+        }
+        input, select {
+            border-color: #c7d2e3;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input:focus, select:focus {
+            border-color: #4a6ea9;
+            box-shadow: 0 0 0 3px rgba(74, 110, 169, 0.2);
+            outline: none;
+        }
+        label {
+            font-weight: 500;
+            color: #3b5a8c;
+        }
+        h2 {
+            font-family: 'Lora', serif;
+            font-weight: 700;
+            font-size: 1.75rem;
+            color: #2a3d5e;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+    <div class="container mx-auto">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Smart Study Planner</h1>
+        {% if error %}
+            <p class="text-red-500 text-center mb-4">{{ error }}</p>
+        {% endif %}
+
+        <div class="grid grid-cols-1 gap-6">
+            <!-- Form for Hours, Scores, and Preferences -->
+            <form method="POST" action="{{ url_for('planner') }}" class="col-span-1" onsubmit="return validateHours()">
+                <input type="hidden" name="action" value="generate">
+                <input type="hidden" id="average_score_input" name="average_score" value="{{ (form_data.scores.values() | sum / form_data.scores | length) | round(2) if form_data.scores else 0 }}">
+
+                <!-- Hours and Scores Section (Side by Side) -->
+                <div class="card p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Hours Section -->
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Hours per Subject</h2>
+                            {% set total_hours = 0 %}
+                            {% for subj in subjects %}
+                                <div class="flex items-center mb-3">
+                                    <label for="hours_{{ subj.lower().replace(' ', '_') }}" class="w-24 text-gray-600">{{ subj }}:</label>
+                                    <input type="number" id="hours_{{ subj.lower().replace(' ', '_') }}" name="hours_{{ subj.lower().replace(' ', '_') }}" value="{{ form_data.hours[subj.lower().replace(' ', '_')] | default(0) }}" min="0" required class="w-20 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" onchange="updateTotalHoursAndStudyTime()">
+                                    {% if loop.last %}
+                                        <p id="total-hours" class="total-hours ml-4"> </p>
+                                    {% endif %}
+                                </div>
+                                {% set total_hours = total_hours + (form_data.hours[subj.lower().replace(' ', '_')] | default(0) | int) %}
+                            {% endfor %}
+                            <div class="flex items-center mt-4">
+                                <div class="flex-1">
+                                    <input type="text" id="new_subject" name="new_subject" placeholder="Add new subject" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <p id="new_subject_error" class="error-message">Please fill out this field.</p>
+                                </div>
+                                <button type="button" onclick="addSubject()" class="btn-primary px-4 py-2 rounded-lg ml-2">Add Subject</button>
+                            </div>
+                        </div>
+
+                        <!-- Scores Section -->
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Scores</h2>
+                            {% set total_score = 0 %}
+                            {% for subj in subjects %}
+                                <div class="flex items-center mb-3">
+                                    <label for="score_{{ subj.lower().replace(' ', '_') }}" class="w-24 text-gray-600">{{ subj }}:</label>
+                                    <input type="number" id="score_{{ subj.lower().replace(' ', '_') }}" name="score_{{ subj.lower().replace(' ', '_') }}" value="{{ form_data.scores[subj.lower().replace(' ', '_')] | default(80) }}" min="0" max="100" required class="w-20 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" oninput="validateScore(this)">
+                                    <p id="score-error-{{ subj.lower().replace(' ', '_') }}" class="score-error" style="display: none;">Score cannot exceed 100%</p>
+                                    {% if loop.last %}
+                                        <p id="average-score" class="average-score ml-4">Average Score: {{ (total_score / subjects | length) | round(2) }}%</p>
+                                    {% endif %}
+                                </div>
+                                {% set total_score = total_score + (form_data.scores[subj.lower().replace(' ', '_')] | default(80) | int) %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Study Habits Section -->
+                <div class="card p-6 mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Study Habits</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="flex items-center">
+                            <label for="study_time" class="w-32 text-gray-600">Study Time (hrs/wk):</label>
+                            <input type="number" id="study_time" name="study_time" value="{{ form_data.study_time | default(0) }}" min="0" max="50" required class="w-20 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" readonly>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="attendance" class="w-32 text-gray-600">Attendance (%):</label>
+                            <input type="number" id="attendance" name="attendance" value="{{ form_data.attendance | default(90) }}" min="0" max="100" required class="w-20 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <div class="flex items-center">
+                            <label for="tutoring_sessions" class="w-32 text-gray-600">Tutoring Sessions (per month):</label>
+                            <input type="number" id="tutoring_sessions" name="tutoring_sessions" value="{{ form_data.tutoring_sessions | default(2) }}" min="0" max="10" required class="w-20 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <div class="flex items-center">
+                            <label for="sleep_hours" class="w-32 text-gray-600">Sleep Hours (per day):</label>
+                            <input type="number" id="sleep_hours" name="sleep_hours" value="{{ form_data.sleep_hours | default(7) }}" min="4" max="12" required class="w-20 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                        <div class="flex items-center">
+                            <label for="physical_activity" class="w-32 text-gray-600">Physical Activity (hrs/day):</label>
+                            <input type="number" id="physical_activity" name="physical_activity" value="{{ form_data.physical_activity | default(3) }}" min="0" max="10" required class="w-20 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- General Info Section -->
+                <div class="card p-6 mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">General Info</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="flex items-center">
+                            <label for="school_type" class="w-32 text-gray-600">School Type:</label>
+                            <select id="school_type" name="school_type" class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                <option value="Public" {% if form_data.school_type == "Public" %}selected{% endif %}>Public</option>
+                                <option value="Private" {% if form_data.school_type == "Private" %}selected{% endif %}>Private</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="parental_education_level" class="w-32 text-gray-600">Parental Education:</label>
+                            <select id="parental_education_level" name="parental_education_level" class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                <option value="" {% if not form_data.parental_education_level %}selected{% endif %}></option>
+                                <option value="College" {% if form_data.parental_education_level == "College" %}selected{% endif %}>College</option>
+                                <option value="Post Graduate" {% if form_data.parental_education_level == "Post Graduate" %}selected{% endif %}>Post Graduate</option>
+                                <option value="High School" {% if form_data.parental_education_level == "High School" %}selected{% endif %}>High School</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="teacher_quality" class="w-32 text-gray-600">Teacher Quality:</label>
+                            <select id="teacher_quality" name="teacher_quality" class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                <option value="" {% if not form_data.teacher_quality %}selected{% endif %}></option>
+                                <option value="Low" {% if form_data.teacher_quality == "Low" %}selected{% endif %}>Low</option>
+                                <option value="Medium" {% if form_data.teacher_quality == "Medium" %}selected{% endif %}>Medium</option>
+                                <option value="High" {% if form_data.teacher_quality == "High" %}selected{% endif %}>High</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Section -->
+                <div class="card p-6 mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Preferences</h2>
+                    {% for constraint in constraints %}
+                        {% set constraint_id = 'constraint_' ~ constraint.type %}
+                        {% if 'subject' in constraint %}
+                            {% set constraint_id = 'constraint_' ~ constraint.type ~ '_' ~ constraint.subject %}
+                        {% endif %}
+                        <div class="flex items-center mb-3">
+                            <input type="checkbox" id="{{ constraint_id }}" name="{{ constraint_id }}" class="mr-2" {% if constraint_id in form_data.preferences %}checked{% endif %}>
+                            <label for="{{ constraint_id }}" class="text-gray-600">
+                                {{ constraint.type }}
+                                {% if 'subject' in constraint %}
+                                    : {{ constraint.subject }}
+                                    {% if constraint.type == "exclude_subject_time" %}
+                                        at {{ constraint.hour }}:00 on {{ constraint.day }}
+                                    {% elif constraint.type == "restrict_subject_to_hours" %}
+                                        between {{ constraint.allowed_hours | join(", ") }}:00 on {{ constraint.day }}
+                                    {% elif constraint.type == "exclude_subject_day" %}
+                                        on {{ constraint.day }}
+                                    {% endif %}
+                                {% endif %}
+                            </label>
+                        </div>
+                    {% endfor %}
+                    <div class="mt-4">
+                        <h3 class="text-lg font-medium text-gray-600 mb-2">Add Custom Constraint (Optional)</h3>
+                        <div class="space-y-3">
+                            <!-- Constraint Type -->
+                            <div class="flex items-center">
+                                <label for="constraint_type" class="w-32 text-gray-600">Type:</label>
+                                <select id="constraint_type" name="constraint_type" class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" onchange="updateConstraintFields()">
+                                    <option value="">Select Type</option>
+                                    <option value="exclude_subject_time">Exclude Subject Time</option>
+                                    <option value="restrict_subject_to_hours">Restrict Subject to Hours</option>
+                                    <option value="exclude_subject_day">Exclude Subject Day</option>
+                                </select>
+                            </div>
+                            <!-- Subject -->
+                            <div class="flex items-center">
+                                <label for="constraint_subject" class="w-32 text-gray-600">Subject:</label>
+                                <select id="constraint_subject" name="constraint_subject" class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="">Select Subject</option>
+                                    {% for subj in subjects %}
+                                        <option value="{{ subj }}">{{ subj }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Hour (for exclude_subject_time) -->
+                            <div id="exclude_subject_time_fields" class="constraint-input flex items-center">
+                                <label for="constraint_hour" class="w-32 text-gray-600">Hour (0-23):</label>
+                                <input type="number" id="constraint_hour" name="constraint_hour" min="0" max="23" class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                            <!-- Allowed Hours (for restrict_subject_to_hours) -->
+                            <div id="restrict_subject_to_hours_fields" class="constraint-input">
+                                <label class="w-32 text-gray-600 block mb-1">Allowed Hours:</label>
+                                <div class="ml-32 space-y-1">
+                                    {% for hour in range(0, 24) %}
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="hour_{{ hour }}" name="constraint_allowed_hours" value="{{ hour }}" class="mr-2">
+                                            <label for="hour_{{ hour }}">{{ hour }}:00</label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <!-- Day (for exclude_subject_day) -->
+                            <div id="exclude_subject_day_fields" class="constraint-input flex items-center">
+                                <label for="constraint_day" class="w-32 text-gray-600">Day:</label>
+                                <select id="constraint_day" name="constraint_day" class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="">Select Day</option>
+                                    {% for day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] %}
+                                        <option value="{{ day }}">{{ day }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Error Message -->
+                            <p id="constraint_error" class="error-message">Please fill out all required fields.</p>
+                            <!-- Add Constraint Button -->
+                            <div class="flex justify-end">
+                                <button type="button" onclick="addConstraint()" class="btn-primary px-4 py-2 rounded-lg">Add Constraint</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-center gap-4">
+                    <button type="submit" class="btn-primary px-6 py-3 rounded-lg text-lg">Generate Schedule</button>
+                    <a href="{{ url_for('logout') }}" class="btn-secondary px-6 py-3 rounded-lg text-lg">Logout</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function updateTotalHoursAndStudyTime() {
+            let total = 0;
+            const hoursInputs = document.querySelectorAll('input[name^="hours_"]');
+            hoursInputs.forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+         
+            document.getElementById('study_time').value = total; // Update Study Time dynamically
+            validateHours();
+        }
+
+        function updateAverageScore() {
+            let total = 0;
+            const scoreInputs = document.querySelectorAll('input[name^="score_"]');
+            scoreInputs.forEach(input => {
+                total += parseInt(input.value) || 0;
+            });
+            const average = total / scoreInputs.length || 0;
+            document.getElementById('average-score').textContent = `Average Score: ${average.toFixed(2)}%`;
+            document.getElementById('average_score_input').value = average.toFixed(2); // Update hidden input
+        }
+
+        function validateScore(input) {
+            const maxScore = 100;
+            const errorElement = document.getElementById(`score-error-${input.id.split('_')[1]}`);
+            let value = parseInt(input.value) || 0;
+            if (value > maxScore) {
+                input.value = maxScore; // Cap the value at 100
+                errorElement.style.display = 'block';
+                setTimeout(() => errorElement.style.display = 'none', 2000); // Hide error after 2 seconds
+            } else {
+                errorElement.style.display = 'none';
+            }
+            updateAverageScore(); // Update average when score changes
+        }
+
+        function validateHours() {
+            const total = Array.from(document.querySelectorAll('input[name^="hours_"]')).reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+            const studyTime = parseInt(document.getElementById('study_time').value) || 0;
+            const mismatch = document.getElementById('hours-mismatch');
+            if (total !== studyTime && studyTime > 0) {
+                mismatch.style.display = 'block';
+                return false; // Prevent form submission
+            } else {
+                mismatch.style.display = 'none';
+                return true;
+            }
+        }
+
+        function addSubject() {
+            const subjectInput = document.getElementById('new_subject');
+            const errorMessage = document.getElementById('new_subject_error');
+
+            if (!subjectInput.value.trim()) {
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            errorMessage.style.display = 'none';
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/planner';
+
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'add_subject';
+            form.appendChild(actionInput);
+
+            const inputClone = subjectInput.cloneNode(true);
+            inputClone.value = subjectInput.value;
+            form.appendChild(inputClone);
+
+            const hoursInputs = document.querySelectorAll('input[name^="hours_"]');
+            hoursInputs.forEach(input => {
+                const inputClone = input.cloneNode(true);
+                form.appendChild(inputClone);
+            });
+
+            const scoresInputs = document.querySelectorAll('input[name^="score_"]');
+            scoresInputs.forEach(input => {
+                const inputClone = input.cloneNode(true);
+                form.appendChild(inputClone);
+            });
+
+            const preferencesInputs = document.querySelectorAll('input[name^="constraint_"]:checked');
+            preferencesInputs.forEach(input => {
+                const inputClone = input.cloneNode(true);
+                inputClone.checked = true;
+                form.appendChild(inputClone);
+            });
+
+            const studyTimeInput = document.getElementById('study_time');
+            const studyTimeClone = studyTimeInput.cloneNode(true);
+            form.appendChild(studyTimeClone);
+
+            const attendanceInput = document.getElementById('attendance');
+            const attendanceClone = attendanceInput.cloneNode(true);
+            form.appendChild(attendanceClone);
+
+            const tutoringSessionsInput = document.getElementById('tutoring_sessions');
+            const tutoringSessionsClone = tutoringSessionsInput.cloneNode(true);
+            form.appendChild(tutoringSessionsClone);
+
+            const sleepHoursInput = document.getElementById('sleep_hours');
+            const sleepHoursClone = sleepHoursInput.cloneNode(true);
+            form.appendChild(sleepHoursClone);
+
+            const physicalActivityInput = document.getElementById('physical_activity');
+            const physicalActivityClone = physicalActivityInput.cloneNode(true);
+            form.appendChild(physicalActivityClone);
+
+            const schoolTypeInput = document.getElementById('school_type');
+            const schoolTypeClone = schoolTypeInput.cloneNode(true);
+            schoolTypeClone.value = schoolTypeInput.value;
+            form.appendChild(schoolTypeClone);
+
+            const parentalEducationLevelInput = document.getElementById('parental_education_level');
+            const parentalEducationLevelClone = parentalEducationLevelInput.cloneNode(true);
+            parentalEducationLevelClone.value = parentalEducationLevelInput.value;
+            form.appendChild(parentalEducationLevelClone);
+
+            const teacherQualityInput = document.getElementById('teacher_quality');
+            const teacherQualityClone = teacherQualityInput.cloneNode(true);
+            teacherQualityClone.value = teacherQualityInput.value;
+            form.appendChild(teacherQualityClone);
+
+            const averageScoreInput = document.getElementById('average_score_input');
+            const averageScoreClone = averageScoreInput.cloneNode(true);
+            form.appendChild(averageScoreClone);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function updateConstraintFields() {
+            const constraintType = document.getElementById('constraint_type').value;
+            document.getElementById('exclude_subject_time_fields').classList.add('constraint-input');
+            document.getElementById('restrict_subject_to_hours_fields').classList.add('constraint-input');
+            document.getElementById('exclude_subject_day_fields').classList.add('constraint-input');
+
+            if (constraintType === 'exclude_subject_time') {
+                document.getElementById('exclude_subject_time_fields').classList.remove('constraint-input');
+            } else if (constraintType === 'restrict_subject_to_hours') {
+                document.getElementById('restrict_subject_to_hours_fields').classList.remove('constraint-input');
+            } else if (constraintType === 'exclude_subject_day') {
+                document.getElementById('exclude_subject_day_fields').classList.remove('constraint-input');
+            }
+        }
+
+        function addConstraint() {
+            const constraintType = document.getElementById('constraint_type').value;
+            const subject = document.getElementById('constraint_subject').value;
+            const errorMessage = document.getElementById('constraint_error');
+
+            let isValid = true;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/planner';
+
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'add_constraint';
+            form.appendChild(actionInput);
+
+            const typeInput = document.createElement('input');
+            typeInput.type = 'hidden';
+            typeInput.name = 'constraint_type';
+            typeInput.value = constraintType;
+            form.appendChild(typeInput);
+
+            const subjectInput = document.createElement('input');
+            subjectInput.type = 'hidden';
+            subjectInput.name = 'constraint_subject';
+            subjectInput.value = subject;
+            form.appendChild(subjectInput);
+
+            if (!constraintType || !subject) {
+                isValid = false;
+            } else if (constraintType === 'exclude_subject_time') {
+                const hour = document.getElementById('constraint_hour').value;
+                const day = document.getElementById('constraint_day').value;
+                if (!hour) {
+                    isValid = false;
+                } else {
+                    const hourInput = document.createElement('input');
+                    hourInput.type = 'hidden';
+                    hourInput.name = 'constraint_hour';
+                    hourInput.value = hour;
+                    form.appendChild(hourInput);
+                    const dayInput = document.createElement('input');
+                    dayInput.type = 'hidden';
+                    dayInput.name = 'constraint_day';
+                    dayInput.value = day;
+                    form.appendChild(dayInput);
+                }
+            } else if (constraintType === 'restrict_subject_to_hours') {
+                const allowedHours = Array.from(document.querySelectorAll('input[name="constraint_allowed_hours"]:checked')).map(input => input.value);
+                const day = document.getElementById('constraint_day').value;
+                if (allowedHours.length === 0) {
+                    isValid = false;
+                } else {
+                    allowedHours.forEach(hour => {
+                        const hourInput = document.createElement('input');
+                        hourInput.type = 'hidden';
+                        hourInput.name = 'constraint_allowed_hours';
+                        hourInput.value = hour;
+                        form.appendChild(hourInput);
+                    });
+                    const dayInput = document.createElement('input');
+                    dayInput.type = 'hidden';
+                    dayInput.name = 'constraint_day';
+                    dayInput.value = day;
+                    form.appendChild(dayInput);
+                }
+            } else if (constraintType === 'exclude_subject_day') {
+                const day = document.getElementById('constraint_day').value;
+                if (!day) {
+                    isValid = false;
+                } else {
+                    const dayInput = document.createElement('input');
+                    dayInput.type = 'hidden';
+                    dayInput.name = 'constraint_day';
+                    dayInput.value = day;
+                    form.appendChild(dayInput);
+                }
+            }
+
+            if (!isValid) {
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            const hoursInputs = document.querySelectorAll('input[name^="hours_"]');
+            hoursInputs.forEach(input => {
+                const inputClone = input.cloneNode(true);
+                form.appendChild(inputClone);
+            });
+
+            const scoresInputs = document.querySelectorAll('input[name^="score_"]');
+            scoresInputs.forEach(input => {
+                const inputClone = input.cloneNode(true);
+                form.appendChild(inputClone);
+            });
+
+            const preferencesInputs = document.querySelectorAll('input[name^="constraint_"]:checked');
+            preferencesInputs.forEach(input => {
+                const inputClone = input.cloneNode(true);
+                inputClone.checked = true;
+                form.appendChild(inputClone);
+            });
+
+            const studyTimeInput = document.getElementById('study_time');
+            const studyTimeClone = studyTimeInput.cloneNode(true);
+            form.appendChild(studyTimeClone);
+
+            const attendanceInput = document.getElementById('attendance');
+            const attendanceClone = attendanceInput.cloneNode(true);
+            form.appendChild(attendanceClone);
+
+            const tutoringSessionsInput = document.getElementById('tutoring_sessions');
+            const tutoringSessionsClone = tutoringSessionsInput.cloneNode(true);
+            form.appendChild(tutoringSessionsClone);
+
+            const sleepHoursInput = document.getElementById('sleep_hours');
+            const sleepHoursClone = sleepHoursInput.cloneNode(true);
+            form.appendChild(sleepHoursClone);
+
+            const physicalActivityInput = document.getElementById('physical_activity');
+            const physicalActivityClone = physicalActivityInput.cloneNode(true);
+            form.appendChild(physicalActivityClone);
+
+            const schoolTypeInput = document.getElementById('school_type');
+            const schoolTypeClone = schoolTypeInput.cloneNode(true);
+            schoolTypeClone.value = schoolTypeInput.value;
+            form.appendChild(schoolTypeClone);
+
+            const parentalEducationLevelInput = document.getElementById('parental_education_level');
+            const parentalEducationLevelClone = parentalEducationLevelInput.cloneNode(true);
+            parentalEducationLevelClone.value = parentalEducationLevelInput.value;
+            form.appendChild(parentalEducationLevelClone);
+
+            const teacherQualityInput = document.getElementById('teacher_quality');
+            const teacherQualityClone = teacherQualityInput.cloneNode(true);
+            teacherQualityClone.value = teacherQualityInput.value;
+            form.appendChild(teacherQualityClone);
+
+            const averageScoreInput = document.getElementById('average_score_input');
+            const averageScoreClone = averageScoreInput.cloneNode(true);
+            form.appendChild(averageScoreClone);
+
+            errorMessage.style.display = 'none';
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        document.addEventListener('DOMContentLoaded', updateAverageScore);
+    </script>
+</body>
+</html>

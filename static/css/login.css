@@ -1,0 +1,110 @@
+body {
+    margin: 0;
+    font-family: "Comic Sans MS", sans-serif;
+    background-color: #f5e9d5;
+    color: #6a4fa3;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.left-side {
+    width: 60%;
+    background-image: url('../images/bg4.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.right-side {
+    width: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.login-frame {
+    padding: 10px;
+    border: 2px solid #6a4fa3;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    margin-left: 50px;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+}
+
+.form-group label {
+    width: 100px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+.form-group input {
+    padding: 5px;
+    font-size: 16px;
+    font-family: "Comic Sans MS", sans-serif;
+    border: 1px solid #6a4fa3;
+    border-radius: 5px;
+}
+
+.button-group {
+    margin-top: 20px;
+}
+
+.button-group button, .button-group a.button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    background-color: #6a4fa3;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.button-group button:hover, .button-group a.button:hover {
+    background-color: #4a3a7d;
+}
+
+.error {
+    color: red;
+    margin: 10px 0;
+}
+
+.success {
+    color: green;
+    margin: 10px 0;
+}
+
+.planner-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid #6a4fa3;
+    border-radius: 10px;
+}
+
+.planner-container h2 {
+    font-size: 18px;
+    margin: 20px 0 10px;
+}
+
+.schedule-img {
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+}

@@ -1,0 +1,154 @@
+{
+    "f": {
+        "password": "1",
+        "Gender": "Male",
+        "subjects": [
+            "Math",
+            "Physics",
+            "Chemistry",
+            "English",
+            "History"
+        ],
+        "constraints": [
+            {
+                "type": "exclude_subject_day",
+                "subject": "Math",
+                "day": "Sun"
+            },
+            {
+                "type": "exclude_subject_day",
+                "subject": "Math",
+                "day": "Thu"
+            },
+            {
+                "type": "restrict_subject_to_hours",
+                "subject": "English",
+                "allowed_hours": [
+                    18,
+                    19
+                ],
+                "day": "Wed"
+            },
+            {
+                "type": "exclude_subject_time",
+                "subject": "Chemistry",
+                "day": "Fri",
+                "hour": 17
+            },
+            {
+                "type": "restrict_subject_to_hours",
+                "subject": "Chemistry",
+                "allowed_hours": [
+                    15,
+                    16,
+                    17
+                ],
+                "day": "Wed"
+            },
+            {
+                "type": "exclude_subject_day",
+                "subject": "Physics",
+                "day": "Thu"
+            }
+        ],
+        "hours": {
+            "math": 8,
+            "physics": 1,
+            "chemistry": 6,
+            "english": 18,
+            "history": 12
+        },
+        "scores": {
+            "math": 50,
+            "physics": 60,
+            "chemistry": 100,
+            "english": 100,
+            "history": 80
+        },
+        "preferences": [
+            "constraint_exclude_subject_day_Math",
+            "constraint_exclude_subject_day_Math",
+            "constraint_restrict_subject_to_hours_Chemistry",
+            "constraint_exclude_subject_day_Physics"
+        ],
+        "study_time": 45,
+        "attendance": 79,
+        "tutoring_sessions": 2,
+        "school_type": "Public",
+        "parental_education_level": "Post Graduate",
+        "teacher_quality": "Medium",
+        "prev_exam_score": 78.0,
+        "sleep_hours": 7.0,
+        "physical_activity": 3.0
+    },
+    "a": {
+        "password": "1",
+        "Gender": "Male",
+        "subjects": [
+            "Math",
+            "Physics",
+            "Chemistry",
+            "English",
+            "History"
+        ],
+        "constraints": [],
+        "hours": {
+            "math": 7,
+            "physics": 5,
+            "chemistry": 4,
+            "english": 14,
+            "history": 16
+        },
+        "scores": {
+            "math": 80,
+            "physics": 80,
+            "chemistry": 31,
+            "english": 67,
+            "history": 80
+        },
+        "preferences": [],
+        "study_time": 46,
+        "attendance": 90,
+        "tutoring_sessions": 1,
+        "school_type": "Public",
+        "parental_education_level": "Post Graduate",
+        "teacher_quality": "Medium",
+        "prev_exam_score": 67.6
+    },
+    "q": {
+        "password": "1",
+        "Gender": "Male",
+        "subjects": [
+            "Math",
+            "Physics",
+            "Chemistry",
+            "English",
+            "History"
+        ],
+        "constraints": [],
+        "hours": {
+            "math": 0,
+            "physics": 0,
+            "chemistry": 0,
+            "english": 0,
+            "history": 0
+        },
+        "scores": {
+            "math": 80,
+            "physics": 80,
+            "chemistry": 80,
+            "english": 80,
+            "history": 80
+        },
+        "preferences": [],
+        "study_time": 0,
+        "attendance": 90,
+        "tutoring_sessions": 2,
+        "sleep_hours": 7.0,
+        "physical_activity": 3.0,
+        "school_type": "Public",
+        "parental_education_level": "",
+        "teacher_quality": "",
+        "prev_exam_score": 80.0
+    }
+}

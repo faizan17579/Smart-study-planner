@@ -1,0 +1,11 @@
+Student_ID,Math_Score,Physics_Score,Chemistry_Score,English_Score,History_Score,Weak_Subject
+1,80,60,75,90,85,Physics
+2,70,85,65,80,90,Chemistry
+3,95,90,85,70,80,English
+4,60,75,80,85,70,Math
+5,85,80,90,65,75,English
+6,75,70,85,80,60,History
+7,90,65,80,75,85,Physics
+8,80,90,70,85,75,Chemistry
+9,65,80,75,90,70,Math
+10,85,75,80,70,90,English

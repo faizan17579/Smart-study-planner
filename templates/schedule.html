@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Schedule</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Emoji:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #d4e4ff 0%, #f5e3ff 100%);
+            font-family: 'Poppins', 'Noto Emoji', sans-serif;
+            overflow-x: hidden;
+            color: #2d3748;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 1.8rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(12px);
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #6366f1, #a78bfa);
+            color: white;
+            padding: 0.9rem 2.2rem;
+            border-radius: 1.2rem;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #a78bfa, #6366f1);
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .day-selector {
+            background: linear-gradient(90deg, #6366f1, #a78bfa);
+            color: white;
+            padding: 0.7rem 1.8rem;
+            border-radius: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-weight: 500;
+        }
+        .day-selector:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+        }
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 1.5rem;
+        }
+        .schedule-item {
+            background: linear-gradient(145deg, #ffffff, #f0f4f8);
+            border-radius: 1.2rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease, background 0.3s ease;
+            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+        .schedule-item:hover {
+            transform: scale(1.1);
+            background: linear-gradient(145deg, #dfe6f0, #e8eef5);
+        }
+        .time-slot {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        .activity {
+            font-weight: 500;
+            color: #2d3748;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .emoji {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Noto Emoji', sans-serif;
+        }
+        .plot-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 1.2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+            transition: transform 0.3s ease;
+        }
+        .plot-container img:hover {
+            transform: scale(1.03);
+        }
+        .notification {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.5s ease forwards;
+            backdrop-filter: blur(10px);
+        }
+        .notification.success {
+            border-left: 10px solid #34d399;
+        }
+        .notification.fail {
+            border-left: 10px solid #f87171;
+        }
+        .notification .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: #6b7280;
+            transition: color 0.2s ease;
+        }
+        .notification .close-btn:hover {
+            color: #2d3748;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        .prediction-btn {
+            background: linear-gradient(90deg, #34d399, #22d3ee);
+            color: white;
+            padding: 0.9rem 2.2rem;
+            border-radius: 1.2rem;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            font-weight: 600;
+        }
+        .prediction-btn:hover {
+            background: linear-gradient(90deg, #22d3ee, #34d399);
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        .mood-btn {
+            background: linear-gradient(90deg, #f472b6, #ec4899);
+            color: white;
+            padding: 0.9rem 2.2rem;
+            border-radius: 1.2rem;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+        .mood-btn:hover {
+            background: linear-gradient(90deg, #ec4899, #f472b6);
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        /* Calendar Styles */
+        .calendar-container {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 1.8rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            padding: 2.5rem;
+            backdrop-filter: blur(12px);
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.8rem;
+            text-align: center;
+        }
+        .calendar-header {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+        }
+        .calendar-day {
+            padding: 1rem;
+            border-radius: 1rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .calendar-day:hover {
+            background: linear-gradient(145deg, #dfe6f0, #e8eef5);
+            transform: scale(1.05);
+        }
+        .calendar-day.active {
+            background: linear-gradient(90deg, #6366f1, #a78bfa);
+            color: white;
+            font-weight: 600;
+        }
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+        /* Animation for Title */
+        @keyframes gradientText {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .animated-title {
+            background: linear-gradient(90deg, #6366f1, #a78bfa, #6366f1);
+            background-size: 200% 200%;
+            animation: gradientText 5s ease infinite;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        /* Timetable Enhancements */
+        .timetable-container {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 1.8rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            padding: 2.5rem;
+            backdrop-filter: blur(12px);
+        }
+        .timetable-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(7, 1fr);
+            gap: 0.5rem;
+            text-align: center;
+        }
+        .timetable-header {
+            font-weight: 600;
+            color: #2d3748;
+            padding: 1rem;
+            border-radius: 0.8rem;
+        }
+        .timetable-cell {
+            background: linear-gradient(145deg, #ffffff, #f0f4f8);
+            border-radius: 0.8rem;
+            padding: 1rem;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, background 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        .timetable-cell:hover {
+            transform: scale(1.05);
+            background: linear-gradient(145deg, #dfe6f0, #e8eef5);
+        }
+        .timetable-cell.empty {
+            background: #edf2f7;
+            box-shadow: none;
+        }
+        .timetable-cell.study {
+            background: linear-gradient(145deg, #e6fffa, #b2f5ea);
+        }
+        .timetable-cell.school {
+            background: linear-gradient(145deg, #fefcbf, #fef08a);
+        }
+        .timetable-cell.physical {
+            background: linear-gradient(145deg, #fed7e2, #f9a8d4);
+        }
+        .timetable-cell.free {
+            background: linear-gradient(145deg, #e6e6fa, #b2b2ff);
+        }
+        .timetable-cell.break {
+            background: linear-gradient(145deg, #d1fae5, #a7f3d0);
+        }
+        .timetable-cell.extracurricular {
+            background: linear-gradient(145deg, #fed7aa, #fb923c);
+        }
+        .timetable-cell.sleep {
+            background: linear-gradient(145deg, #e0e7ff, #c7d2fe);
+        }
+        .timetable-time {
+            font-weight: 600;
+            color: #4a5568;
+            padding: 1rem;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const select = document.getElementById('daySelect');
+            const scheduleDays = document.querySelectorAll('.schedule-day');
+            const calendarDays = document.querySelectorAll('.calendar-day:not(.empty)');
+
+            // Day selector change event
+            select.addEventListener('change', function() {
+                const selectedDay = select.value;
+                scheduleDays.forEach(day => {
+                    day.style.display = day.id === `day-${selectedDay}` ? 'block' : 'none';
+                });
+                calendarDays.forEach(day => {
+                    day.classList.toggle('active', day.dataset.day === selectedDay);
+                });
+            });
+
+            // Calendar day click event
+            calendarDays.forEach(day => {
+                day.addEventListener('click', function() {
+                    const selectedDay = this.dataset.day;
+                    select.value = selectedDay;
+                    select.dispatchEvent(new Event('change'));
+                });
+            });
+
+            // Set default day to Monday
+            select.value = 'Mon';
+            select.dispatchEvent(new Event('change'));
+
+            // Prediction button functionality
+            const predictionBtn = document.getElementById('predictionBtn');
+            const notification = document.getElementById('notification');
+            const closeNotification = document.getElementById('closeNotification');
+            const notificationMessage = document.getElementById('notificationMessage');
+            const checkStatus = '{{ check }}';
+            const examScore = parseFloat('{{ exam_score | round }}');
+
+            predictionBtn.addEventListener('click', function() {
+                if (checkStatus.toLowerCase() === 'pass') {
+                    notification.classList.add('success');
+                    notification.classList.remove('fail');
+                    notificationMessage.innerHTML = '🎉 Congratulations! You are predicted to <strong>pass</strong> with a score of ' + examScore + '%!';
+                } else {
+                    notification.classList.add('fail');
+                    notification.classList.remove('success');
+                    notificationMessage.innerHTML = '😔 Oh no! You are predicted to <strong>fail</strong> with a score of ' + examScore + '%. Keep studying!';
+                }
+                notification.style.display = 'block';
+            });
+
+            closeNotification.addEventListener('click', function() {
+                notification.style.display = 'none';
+            });
+
+            // Auto-close notification after 5 seconds
+            predictionBtn.addEventListener('click', function() {
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 5000);
+            });
+
+            // Emoji mapping for activities
+            const activityEmojis = {
+                'study': '📚',
+                'school': '🏫',
+                'physical': '🏃‍♂️',
+                'free': '🕒',
+                'break': '☕',
+                'extracurricular': '🎨',
+                'sleep': '😴',
+                'math': '📖',
+                'science': '📖',
+                'history': '📖',
+                'english': '📖',
+                'literature': '📖',
+                'geography': '📖',
+                'physics': '📖',
+                'chemistry': '📖',
+                'biology': '📖'
+            };
+
+            // Add emojis and classes to schedule items
+            document.querySelectorAll('.activity').forEach(activity => {
+                const text = activity.textContent.toLowerCase();
+                for (const [key, emoji] of Object.entries(activityEmojis)) {
+                    if (text.includes(key)) {
+                        activity.innerHTML = `<span class="emoji">${emoji}</span> ${activity.textContent}`;
+                        activity.closest('.schedule-item').classList.add(key);
+                        break;
+                    }
+                }
+            });
+
+            // Add emojis and classes to timetable cells
+            document.querySelectorAll('.timetable-cell:not(.empty)').forEach(cell => {
+                const text = cell.textContent.toLowerCase().trim();
+                for (const [key, emoji] of Object.entries(activityEmojis)) {
+                    if (text.includes(key)) {
+                        cell.innerHTML = `<span class="emoji">${emoji}</span><br>${cell.textContent}`;
+                        cell.classList.add(key);
+                        break;
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-8">
+    <div class="container mx-auto max-w-6xl">
+        <h1 class="text-6xl font-bold text-center mb-14 animated-title">Your Study Schedule</h1>
+
+        <div class="grid grid-cols-1 gap-12">
+            <!-- Notification Box -->
+            <div id="notification" class="notification">
+                <span id="closeNotification" class="close-btn">×</span>
+                <p id="notificationMessage" class="text-xl font-semibold"></p>
+            </div>
+
+            <!-- Calendar -->
+            <div class="calendar-container">
+                <h2 class="calendar-header text-3xl font-semibold text-gray-700 mb-8">Select a Day</h2>
+                <div class="calendar">
+                    <div class="calendar-day font-semibold">Sun</div>
+                    <div class="calendar-day font-semibold">Mon</div>
+                    <div class="calendar-day font-semibold">Tue</div>
+                    <div class="calendar-day font-semibold">Wed</div>
+                    <div class="calendar-day font-semibold">Thu</div>
+                    <div class="calendar-day font-semibold">Fri</div>
+                    <div class="calendar-day font-semibold">Sat</div>
+                    <div class="calendar-day" data-day="Sun">1</div>
+                    <div class="calendar-day active" data-day="Mon">2</div>
+                    <div class="calendar-day" data-day="Tue">3</div>
+                    <div class="calendar-day" data-day="Wed">4</div>
+                    <div class="calendar-day" data-day="Thu">5</div>
+                    <div class="calendar-day" data-day="Fri">6</div>
+                    <div class="calendar-day" data-day="Sat">7</div>
+                    <div class="calendar-day empty"></div>
+                    <div class="calendar-day empty"></div>
+                    <div class="calendar-day empty"></div>
+                    <div class="calendar-day empty"></div>
+                    <div class="calendar-day empty"></div>
+                    <div class="calendar-day empty"></div>
+                    <div class="calendar-day empty"></div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="card p-12">
+                <h2 class="text-3xl font-semibold text-gray-700 mb-8">Recommendations</h2>
+                <p class="text-gray-600 text-lg">Weak Subject: {{ weak_subject or 'N/A' }}</p>
+                <h3 class="text-2xl font-medium text-gray-700 mt-8">Extra Study Hours:</h3>
+                {% for subject, hours in recommendations.items() %}
+                    <p class="text-gray-600 text-lg">• {{ subject | capitalize }}: {{ hours }} extra hour(s)</p>
+                {% endfor %}
+            </div>
+
+            <!-- Predictions -->
+            <div class="card p-12">
+                <h2 class="text-3xl font-semibold text-gray-700 mb-8">Predictions</h2>
+                <p class="text-gray-600 text-lg">Predicted Future Score: {{ exam_score | round }}%</p>
+                <p class="text-gray-600 text-lg">Extra Extracurricular Activities: {{ health_plan.get('Extracurricular_Activities') }}</p>
+                <button id="predictionBtn" class="prediction-btn mt-8">Check Pass/Fail Prediction</button>
+                <a href="{{ url_for('face') }}" class="mood-btn mt-4 block text-center">Unveil Your Study Vibe!</a>
+            </div>
+
+            <!-- Schedule Summary -->
+            <div class="card p-12">
+                <h2 class="text-3xl font-semibold text-gray-700 mb-8">Daily Schedule</h2>
+                <div class="mb-8">
+                    <select id="daySelect" class="day-selector bg-gray-100 text-black px-5 py-3 rounded">
+                        <option value="Mon">Monday</option>
+                        <option value="Tue">Tuesday</option>
+                        <option value="Wed">Wednesday</option>
+                        <option value="Thu">Thursday</option>
+                        <option value="Fri">Friday</option>
+                        <option value="Sat">Saturday</option>
+                        <option value="Sun">Sunday</option>
+                    </select>
+                </div>
+                {% if schedule_summary %}
+                    {% set days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                    {% for day in days %}
+                        <div id="day-{{ day }}" class="schedule-day" style="display: none;">
+                            <h3 class="text-xl font-semibold text-gray-700 mb-6">{{ day | capitalize }}</h3>
+                            <div class="schedule-grid">
+                                {% for item in schedule_summary if item.Day == day %}
+                                    <div class="schedule-item">
+                                        <div class="time-slot">{{ item.Hour }}:00</div>
+                                        <div class="activity">{{ item.Activity | capitalize }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-600 text-lg">No schedule data available.</p>
+                {% endif %}
+            </div>
+
+            <!-- Declining Score Trends -->
+            <div class="card p-12">
+                <h2 class="text-3xl font-semibold text-gray-700 mb-8">Score Trends</h2>
+                {% if plot_files %}
+                    <div class="plot-container grid grid-cols-1 md:grid-cols-2 gap-10">
+                        {% for plot_file in plot_files %}
+                        <div class="mb-8">
+                            <img src="{{ url_for('serve_plot', username=session['username'], filename=plot_file) }}" alt="Score Trend for {{ plot_file.split('.png')[0] | capitalize }}" class="w-full max-w-lg mx-auto">
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-600 text-lg">No declining trends to display.</p>
+                {% endif %}
+            </div>
+
+            <!-- Back Button -->
+            <div class="flex justify-center">
+                <a href="{{ url_for('planner') }}" class="btn-primary text-xl">Back to Planner</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
